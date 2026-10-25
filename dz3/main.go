@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -8,6 +9,10 @@ import (
 type Notifier interface {
 	Send(message string) error
 }
+
+// проверка интерфейса на этапе компиляции
+var _ Notifier = EmailNotifier{}
+var _ Notifier = PushNotifier{}
 
 // 7 пункт
 type BaseNotifier struct {
@@ -25,6 +30,10 @@ type EmailNotifier struct {
 }
 
 func (n EmailNotifier) Send(message string) error {
+	// ошибка пустого сообщения
+	if message == "" {
+		return errors.New("ошибка: пустое сообщение для email")
+	}
 	fmt.Printf("email to %s: %s\n", n.Address, message)
 	return nil
 }
@@ -75,8 +84,10 @@ func main() {
 		},
 	}
 
-	_ = dispatch(notifiers, "вперёд заказ")
-
+	err := dispatch(notifiers, "вперёд заказ")
+	if err != nil {
+		fmt.Println("ошибка: ", err)
+	}
 	for _, notifier := range notifiers {
 		fmt.Println(describe(notifier))
 	}
